@@ -44,7 +44,7 @@ export default function SelectionPage({ onSubmit }: SelectionPageProps) {
           <div className="max-w-6xl mx-auto flex items-center justify-center gap-3">
             <TrendingUp className="w-8 h-8 text-[#88D498]" />
             <h1 className="text-3xl md:text-4xl font-bold text-white tracking-tight">
-              Portfolio Manager
+              Recomendación de Portafolios
             </h1>
           </div>
         </div>

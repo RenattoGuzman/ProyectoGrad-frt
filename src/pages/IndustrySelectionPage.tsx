@@ -2,14 +2,29 @@ import { useState } from 'react'
 import { TrendingUp, CheckCircle2, ArrowRight } from 'lucide-react'
 
 const INDUSTRIES = [
+  'Servicios Financieros',
   'Tecnología',
-  'Petróleo',
-  'Automotriz',
+  'Consumo esencial',
+  'Consumo discrecional',
+  'Servicios de comunicación',
   'Salud',
-  'Telecomunicaciones',
-  'Alimentación',
-  'Ingeniería'
+  'Industriales',
+  'Bienes Raíces',
 ]
+
+// Map display name -> stored value (id/key). Use getIndustryValue(name) to retrieve the stored value.
+const INDUSTRY_VALUES: Record<string, string> = {
+  'Servicios Financieros': 'Financial Services',
+  'Consumo esencial': 'Consumer Defensive',
+  'Consumo discrecional': 'Consumer Cyclical',
+  'Industriales': 'Industrials',
+  'Tecnología': 'Technology',
+  'Salud': 'Healthcare',
+  'Bienes Raíces': 'Real Estate',
+  'Telecomunicaciones': 'Communication Services',
+}
+
+const getIndustryValue = (name: string) => INDUSTRY_VALUES[name] ?? name
 
 interface IndustrySelectionPageProps {
   onNext: (industries: string[]) => void
@@ -42,7 +57,7 @@ export default function IndustrySelectionPage({ onNext }: IndustrySelectionPageP
         <div className="text-center mb-12">
           <div className="inline-flex items-center gap-3 mb-6 px-6 py-3 bg-white/10 backdrop-blur-sm rounded-full border border-white/20">
             <TrendingUp className="w-6 h-6 text-[#88D498]" />
-            <span className="text-white font-semibold text-lg">Portfolio Manager</span>
+            <span className="text-white font-semibold text-lg">Recomendación de Portafolios</span>
           </div>
 
           <h1 className="text-5xl md:text-6xl font-bold text-white mb-4 tracking-tight">
@@ -54,7 +69,25 @@ export default function IndustrySelectionPage({ onNext }: IndustrySelectionPageP
         </div>
 
         <div className="bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl p-8 md:p-12 border border-white/20">
-          <div className="grid sm:grid-cols-2 gap-4 mb-8">
+          {/* Select all */}
+          {/* <div className="flex justify-start mb-4 mt-0">
+            <button
+              onClick={() => {
+                if (selectedIndustries.length === INDUSTRIES.length) {
+                  setSelectedIndustries([])
+                } else {
+                  setSelectedIndustries([...INDUSTRIES])
+                }
+              }}
+              className="px-6 py-3 text-lg font-semibold text-[#1A936F] hover:text-[#18b284] 
+                        bg-[#1A936F]/10 hover:bg-[#1A936F]/20 rounded-xl transition-all duration-200
+                        border border-[#1A936F]/30 hover:border-[#88D498]/50"
+            >
+              {selectedIndustries.length === INDUSTRIES.length ? 'Deseleccionar todas' : 'Seleccionar todas'}
+            </button>
+          </div> */}
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-x-8 gap-y-5 mb-8">
             {INDUSTRIES.map((industry, index) => {
               const isSelected = selectedIndustries.includes(industry)
               return (
@@ -93,7 +126,7 @@ export default function IndustrySelectionPage({ onNext }: IndustrySelectionPageP
             })}
           </div>
 
-          {selectedIndustries.length > 0 && (
+          {/* {selectedIndustries.length > 0 && (
             <div className="mb-8 p-5 bg-gradient-to-r from-[#1A936F]/10 to-[#88D498]/10 rounded-2xl border-2 border-[#88D498]/30 animate-fadeIn">
               <div className="flex items-center justify-between">
                 <div>
@@ -114,7 +147,7 @@ export default function IndustrySelectionPage({ onNext }: IndustrySelectionPageP
                 </div>
               </div>
             </div>
-          )}
+          )} */}
 
           <button
             onClick={handleNext}

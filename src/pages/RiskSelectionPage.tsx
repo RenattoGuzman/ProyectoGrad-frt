@@ -1,29 +1,148 @@
-import { useState } from 'react'
-import { TrendingUp, ArrowLeft, Target, Shield, Zap } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { TrendingUp, ArrowLeft, Target, Shield, Zap, Sparkles, Settings } from 'lucide-react'
+import LoadingPage from './LoadingPage'
+import { API_LINK } from '../variables'
+
 
 interface RiskSelectionPageProps {
   selectedIndustries: string[]
-  onSubmit: (riskLevel: number) => void
+  onSubmit: (riskLevel: number, mode: 'auto' | 'manual') => void
   onBack: () => void
+  setLastAvailableDate: (date: string) => void
+  setRiskGlobalRanges: (ranges: RiskRanges) => void
 }
 
-export default function RiskSelectionPage({ selectedIndustries, onSubmit, onBack }: RiskSelectionPageProps) {
-  const [riskLevel, setRiskLevel] = useState<number>(17)
+interface RiskRanges {
+  min_volatility: number
+  max_volatility: number
+  sharpe_ratio_volatility: number
+  last_available_date: string
+}
+
+export default function RiskSelectionPage({ selectedIndustries, onSubmit, onBack, setLastAvailableDate, setRiskGlobalRanges }: RiskSelectionPageProps) {
+  const [riskMode, setRiskMode] = useState<'auto' | 'manual'>('auto')
+  const [riskLevel, setRiskLevel] = useState<number>(0)
+  const [riskRanges, setRiskRanges] = useState<RiskRanges | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  const industriesEnglish = {
+    'Servicios Financieros': 'Financial Services',
+    'Tecnología': 'Technology',
+    'Consumo esencial': 'Consumer Defensive',
+    'Consumo discrecional': 'Consumer Cyclical',
+    'Servicios de comunicación': 'Communication Services',
+    'Salud': 'Healthcare',
+    'Industriales': 'Industrials',
+    'Bienes Raíces': 'Real Estate',
+  }
+
+  useEffect(() => {
+    const fetchRiskRanges = async () => {
+      try {
+        setLoading(true)
+        const englishIndustries = selectedIndustries.map(
+          industry => industriesEnglish[industry as keyof typeof industriesEnglish]
+        )
+        
+        const queryParams = englishIndustries
+          .map(industry => `industries=${encodeURIComponent(industry)}`)
+          .join('&')
+        
+        const response = await fetch(`${API_LINK}/portfolio/risk-ranges?${queryParams}`)
+        const data: RiskRanges = await response.json()
+        
+        setRiskRanges(data)
+        setRiskGlobalRanges(data)
+        // Set initial risk level to sharpe ratio volatility for auto mode
+        setRiskLevel(data.sharpe_ratio_volatility)
+        setLastAvailableDate(data.last_available_date)
+      } catch (error) {
+        console.error('Error fetching risk ranges:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchRiskRanges()
+  }, [selectedIndustries])
+
+  const handleModeChange = (mode: 'auto' | 'manual') => {
+    setRiskMode(mode)
+    if (mode === 'auto' && riskRanges) {
+      setRiskLevel(riskRanges.sharpe_ratio_volatility)
+    }
+  }
 
   const getRiskProfile = () => {
-    if (riskLevel < 10) return { name: 'Conservador', color: '#1A936F', icon: Shield }
-    if (riskLevel < 20) return { name: 'Moderado', color: '#F59E0B', icon: Target }
+    if (!riskRanges) return { name: 'Moderado', color: '#F59E0B', icon: Target }
+    
+    const range = riskRanges.max_volatility - riskRanges.min_volatility
+    const conservativeThreshold = riskRanges.min_volatility + (range * 0.25)
+    const moderateThreshold = riskRanges.min_volatility + (range * 0.50)
+    
+    if (riskLevel < conservativeThreshold) return { name: 'Conservador', color: '#1A936F', icon: Shield }
+    if (riskLevel < moderateThreshold) return { name: 'Moderado', color: '#F59E0B', icon: Target }
     return { name: 'Agresivo', color: '#EF4444', icon: Zap }
   }
 
   const getRiskDescription = () => {
-    if (riskLevel < 10) return 'Mayor estabilidad con retornos predecibles y menor volatilidad'
-    if (riskLevel < 20) return 'Balance perfecto entre estabilidad y potencial de crecimiento'
+    if (!riskRanges) return 'Cargando información...'
+    
+    const range = riskRanges.max_volatility - riskRanges.min_volatility
+    const conservativeThreshold = riskRanges.min_volatility + (range * 0.25)
+    const moderateThreshold = riskRanges.min_volatility + (range * 0.50)
+    
+    if (riskLevel < conservativeThreshold) return 'Mayor estabilidad con retornos predecibles y menor volatilidad'
+    if (riskLevel < moderateThreshold) return 'Balance perfecto entre estabilidad y potencial de crecimiento'
     return 'Mayor potencial de retorno con volatilidad más alta'
+  }
+
+  const formatPercentage = (value: number) => {
+    return (value * 100).toFixed(2)
+  }
+
+  const isAtMin = () => riskRanges && Math.abs(riskLevel - riskRanges.min_volatility) < 0.001
+  const isAtMax = () => riskRanges && Math.abs(riskLevel - riskRanges.max_volatility) < 0.001
+
+  const getDisplayValue = () => {
+    if (isAtMin()) return 'MIN'
+    if (isAtMax()) return 'MAX'
+    return formatPercentage(riskLevel)
+  }
+
+  const getSubmitRiskValue = () => {
+    if (isAtMin()) return -1000
+    if (isAtMax()) return 1000
+    return riskLevel
+  }
+
+  const getSliderBackground = () => {
+    if (!riskRanges) return '#e5e7eb'
+    
+    const range = riskRanges.max_volatility - riskRanges.min_volatility
+    const conservativeEnd = 25
+    const moderateEnd = 50
+    const currentPosition = ((riskLevel - riskRanges.min_volatility) / range) * 100
+    
+    return `linear-gradient(to right,
+      #1A936F 0%,
+      #1A936F ${conservativeEnd}%,
+      #F59E0B ${conservativeEnd}%,
+      #F59E0B ${moderateEnd}%,
+      #EF4444 ${moderateEnd}%,
+      #EF4444 ${currentPosition}%,
+      #e5e7eb ${currentPosition}%,
+      #e5e7eb 100%)`
   }
 
   const profile = getRiskProfile()
   const RiskIcon = profile.icon
+
+  if (loading || !riskRanges) {
+    return (
+      <LoadingPage message='Calculando niveles de riesgo...' />
+    )
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#114B5F] via-[#0d3d4d] to-[#1A936F] flex items-center justify-center">
@@ -33,7 +152,7 @@ export default function RiskSelectionPage({ selectedIndustries, onSubmit, onBack
         <div className="text-center mb-12">
           <div className="inline-flex items-center gap-3 mb-6 px-6 py-3 bg-white/10 backdrop-blur-sm rounded-full border border-white/20">
             <TrendingUp className="w-6 h-6 text-[#88D498]" />
-            <span className="text-white font-semibold text-lg">Portfolio Manager</span>
+            <span className="text-white font-semibold text-lg">Recomendación de Portafolios</span>
           </div>
 
           <h1 className="text-5xl md:text-6xl font-bold text-white mb-4 tracking-tight">
@@ -45,6 +164,32 @@ export default function RiskSelectionPage({ selectedIndustries, onSubmit, onBack
         </div>
 
         <div className="bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl p-8 md:p-12 border border-white/20">
+          {/* Tab Selector */}
+          <div className="flex gap-3 mb-10 p-2 bg-gray-100 rounded-2xl">
+            <button
+              onClick={() => handleModeChange('auto')}
+              className={`flex-1 flex items-center justify-center gap-2 px-6 py-4 rounded-xl font-semibold text-lg transition-all duration-300 ${
+                riskMode === 'auto'
+                  ? 'bg-gradient-to-r from-[#1A936F] to-[#88D498] text-white shadow-lg'
+                  : 'bg-transparent text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              <Sparkles className="w-5 h-5" />
+              Riesgo optimizado
+            </button>
+            <button
+              onClick={() => handleModeChange('manual')}
+              className={`flex-1 flex items-center justify-center gap-2 px-6 py-4 rounded-xl font-semibold text-lg transition-all duration-300 ${
+                riskMode === 'manual'
+                  ? 'bg-gradient-to-r from-[#1A936F] to-[#88D498] text-white shadow-lg'
+                  : 'bg-transparent text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              <Settings className="w-5 h-5" />
+              Riesgo manual
+            </button>
+          </div>
+
           <div className="flex flex-col items-center mb-12">
             <div className="relative mb-8">
               <div
@@ -59,12 +204,14 @@ export default function RiskSelectionPage({ selectedIndustries, onSubmit, onBack
                 }}
               >
                 <div className="w-44 h-44 rounded-full bg-white flex flex-col items-center justify-center">
-                  <span className="text-7xl font-bold transition-colors duration-500" style={{ color: profile.color }}>
-                    {riskLevel}
+                  <span className={`font-bold transition-colors duration-500 ${isAtMin() || isAtMax() ? 'text-5xl' : 'text-6xl'}`} style={{ color: profile.color }}>
+                    {getDisplayValue()}
                   </span>
-                  <span className="text-3xl font-semibold transition-colors duration-500" style={{ color: profile.color }}>
-                    %
-                  </span>
+                  {!isAtMin() && !isAtMax() && (
+                    <span className="text-2xl font-semibold transition-colors duration-500" style={{ color: profile.color }}>
+                      %
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
@@ -82,7 +229,7 @@ export default function RiskSelectionPage({ selectedIndustries, onSubmit, onBack
               </h2>
             </div>
 
-            <p className="text-gray-600 text-center text-lg max-w-md">
+            <p className="text-gray-600 text-center text-lg">
               {getRiskDescription()}
             </p>
           </div>
@@ -91,21 +238,17 @@ export default function RiskSelectionPage({ selectedIndustries, onSubmit, onBack
             <div className="relative">
               <input
                 type="range"
-                min="5"
-                max="30"
+                min={riskRanges.min_volatility}
+                max={riskRanges.max_volatility}
+                step={0.001}
                 value={riskLevel}
                 onChange={(e) => setRiskLevel(Number(e.target.value))}
-                className="w-full h-4 rounded-full appearance-none cursor-pointer slider"
+                disabled={riskMode === 'auto'}
+                className="w-full h-4 rounded-full appearance-none slider"
                 style={{
-                  background: `linear-gradient(to right,
-                    #1A936F 0%,
-                    #1A936F 16.67%,
-                    #F59E0B 16.67%,
-                    #F59E0B 50%,
-                    #EF4444 50%,
-                    #EF4444 ${((riskLevel - 5) / 25) * 100}%,
-                    #e5e7eb ${((riskLevel - 5) / 25) * 100}%,
-                    #e5e7eb 100%)`
+                  background: getSliderBackground(),
+                  cursor: riskMode === 'auto' ? 'not-allowed' : 'pointer',
+                  opacity: riskMode === 'auto' ? 0.6 : 1
                 }}
               />
             </div>
@@ -114,17 +257,20 @@ export default function RiskSelectionPage({ selectedIndustries, onSubmit, onBack
               <div className="text-center flex-1">
                 <div className="w-3 h-3 bg-[#1A936F] rounded-full mx-auto mb-2"></div>
                 <p className="text-xs font-semibold text-gray-500 mb-1">Conservador</p>
-                <p className="text-lg font-bold text-[#1A936F]">5%</p>
+                <p className="text-lg font-bold text-[#1A936F]">{formatPercentage(riskRanges.min_volatility)}%</p>
               </div>
               <div className="text-center flex-1">
                 <div className="w-3 h-3 bg-[#F59E0B] rounded-full mx-auto mb-2"></div>
                 <p className="text-xs font-semibold text-gray-500 mb-1">Moderado</p>
-                <p className="text-lg font-bold text-[#F59E0B]">10-19%</p>
+                <p className="text-lg font-bold text-[#F59E0B]">
+                  {formatPercentage(riskRanges.min_volatility + (riskRanges.max_volatility - riskRanges.min_volatility) * 0.25)}-
+                  {formatPercentage(riskRanges.min_volatility + (riskRanges.max_volatility - riskRanges.min_volatility) * 0.50)}%
+                </p>
               </div>
               <div className="text-center flex-1">
                 <div className="w-3 h-3 bg-[#EF4444] rounded-full mx-auto mb-2"></div>
                 <p className="text-xs font-semibold text-gray-500 mb-1">Agresivo</p>
-                <p className="text-lg font-bold text-[#EF4444]">20-30%</p>
+                <p className="text-lg font-bold text-[#EF4444]">{formatPercentage(riskRanges.max_volatility)}%</p>
               </div>
             </div>
           </div>
@@ -156,7 +302,7 @@ export default function RiskSelectionPage({ selectedIndustries, onSubmit, onBack
             </button>
 
             <button
-              onClick={() => onSubmit(riskLevel)}
+              onClick={() => onSubmit(getSubmitRiskValue(), riskMode)}
               className="group relative flex-1 px-8 py-5 bg-gradient-to-r from-[#1A936F] to-[#88D498]
                        text-white font-bold text-2xl rounded-2xl shadow-2xl
                        hover:shadow-[#1A936F]/50 transform hover:scale-105
