@@ -9,8 +9,7 @@ import {
   Tooltip,
 } from "recharts";
 
-// Mock API_LINK for demo
-const API_LINK = "https://api.example.com";
+import { API_LINK } from "../variables";
 
 interface Stock {
   ticker: string;
@@ -36,23 +35,19 @@ interface BacktestingData {
 }
 
 interface HistoricalPageProps {
-  initialStocks?: Stock[];
-  portfolioData?: PortfolioData | null;
-  onBack?: () => void;
+  initialStocks: Stock[];
+  portfolioData: PortfolioData | null;
+  onBack: () => void;
   onNavigate?: (page: "results" | "historical" | "projection") => void;
-  queryParams?: string;
+  queryParams: string;
 }
 
 export default function HistoricalPage({
-  initialStocks = [
-    { ticker: "AAPL", percentage: 33.33, logo_link: "https://raw.githubusercontent.com/davidepalazzo/ticker-logos/refs/heads/main/ticker_icons/AAPL.png" },
-    { ticker: "GOOGL", percentage: 33.33, logo_link: "https://raw.githubusercontent.com/davidepalazzo/ticker-logos/refs/heads/main/ticker_icons/GOOGL.png" },
-    { ticker: "MSFT", percentage: 33.34, logo_link: "https://raw.githubusercontent.com/davidepalazzo/ticker-logos/refs/heads/main/ticker_icons/MSFT.png" },
-  ],
-  portfolioData = null,
-  onBack = () => console.log("Back clicked"),
-  onNavigate = (page) => console.log(`Navigate to ${page}`),
-  queryParams = "",
+  initialStocks,
+  portfolioData,
+  onBack,
+  onNavigate,
+  queryParams,
 }: HistoricalPageProps) {
   const [stocks, setStocks] = useState<Stock[]>(initialStocks);
   const [startDate, setStartDate] = useState<string>("2024-01-01");
@@ -67,43 +62,64 @@ export default function HistoricalPage({
   const [newTicker, setNewTicker] = useState<string>("");
   const [newPercentage, setNewPercentage] = useState<string>("");
 
-  const [stockOptions] = useState<string[]>([
-    "AAPL", "GOOGL", "MSFT", "AMZN", "TSLA", "META", "NVDA", "JPM", "V", "WMT"
-  ]);
+  const [stockOptions, setStockOptions] = useState<string[]>([]);
 
-  // Generate mock backtesting data
   useEffect(() => {
-    const generateMockData = () => {
-      const data: BacktestingData = {
-        portfolio_growth: [],
-        final_return: 1.25,
-        start_date: startDate,
-        end_date: endDate,
-      };
-
-      const start = new Date(startDate);
-      const end = new Date(endDate);
-      const daysDiff = Math.floor((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
-      
-      for (let i = 0; i <= daysDiff; i += Math.max(1, Math.floor(daysDiff / 50))) {
-        const currentDate = new Date(start);
-        currentDate.setDate(start.getDate() + i);
-        const progress = i / daysDiff;
-        const randomVariation = (Math.random() - 0.5) * 0.1;
-        const value = 1 + (0.25 * progress) + randomVariation;
-        
-        data.portfolio_growth.push({
-          date: currentDate.toISOString().split('T')[0],
-          value: Math.max(0.5, value),
-        });
+    const fetchStockOptions = async () => {
+      try {
+        const response = await fetch(
+          `${API_LINK}/stocks-available?${queryParams}`
+        );
+        const data = await response.json();
+        setStockOptions(data.stocks);
+      } catch (error) {
+        console.error("Error fetching stock options:", error);
       }
-
-      setBacktestingData(data);
-      setLoading(false);
     };
 
-    setLoading(true);
-    setTimeout(generateMockData, 500);
+    fetchStockOptions();
+  }, [queryParams]);
+
+  const fetchBacktestingData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const portfolio_weights: Record<string, number> = {};
+      stocks.forEach((stock) => {
+        portfolio_weights[stock.ticker] = stock.percentage / 100;
+      });
+
+      const response = await fetch(`${API_LINK}/backtesting`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          portfolio_weights,
+          start_date: startDate,
+          end_date: endDate,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Error al obtener datos históricos");
+      }
+
+      const data: BacktestingData = await response.json();
+      setBacktestingData(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Error desconocido");
+      console.error("Error fetching backtesting data:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (stocks.length > 0 && startDate && endDate) {
+      fetchBacktestingData();
+    }
   }, [startDate, endDate, stocks]);
 
   const handleAddStock = () => {
@@ -376,7 +392,7 @@ export default function HistoricalPage({
         <div className="max-w-7xl mx-auto px-6 py-12">
           <div className="text-center mb-8">
             <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
-              Análisis Retrospectivo
+              Rendimiento Histórico
             </h2>
             <p className="text-xl text-white/80">
               Analiza el rendimiento histórico y personaliza tu portafolio
@@ -759,7 +775,6 @@ export default function HistoricalPage({
                       className="flex-1 px-3 py-2 border-2 border-gray-300 rounded-lg text-sm focus:border-[#1A936F] focus:outline-none"
                       min="0"
                       max="100"
-                      disabled={autoAdjust}
                     />
                     <button
                       onClick={handleAddStock}
