@@ -389,7 +389,7 @@ export default function ProjectionPage({
             className="group w-full px-8 py-5 bg-gradient-to-r from-[#1A936F] to-[#88D498] text-white font-bold text-2xl rounded-2xl shadow-2xl hover:shadow-[#1A936F]/50 transform hover:scale-105 transition-all duration-300 overflow-hidden relative"
           >
             <span className="relative z-10 flex items-center justify-center gap-3">
-              Ver Análisis Retrospectivo
+              Ver Rendimiento Histórico
               <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
             </span>
             <div className="absolute inset-0 bg-gradient-to-r from-[#88D498] to-[#1A936F] opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
