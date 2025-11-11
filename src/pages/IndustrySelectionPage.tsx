@@ -41,25 +41,25 @@ const TUTORIAL_STEPS = [
   {
     title: "Paso 2: Configuración de Riesgo",
     description:
-      "Define tu perfil de riesgo y horizonte de inversión. Esto nos ayudará a personalizar las recomendaciones de portafolio.",
+      "Define tu nivel de riesgo y horizonte de inversión. El riesgo representa tu tolerancia a la volatilidad y posibles pérdidas. Se recomienda elegir el riesgo automático. ",
     gif: "/Pantalla2.gif",
   },
   {
-    title: "Paso 3: Análisis de Portafolio",
+    title: "Paso 3: Resultados de Portafolio",
     description:
-      "Revisa el análisis detallado de tu portafolio recomendado, incluyendo diversificación y rendimientos esperados.",
+      "Revisa el detalle de tu portafolio recomendado, incluyendo los activos seleccionados y la cantidad asignada a cada uno.",
     gif: "/Pantalla3.gif",
   },
   {
-    title: "Paso 4: Selección de Acciones",
+    title: "Paso 4: Proyección de Crecimiento",
     description:
-      "Explora las acciones recomendadas para cada industria seleccionada y revisa sus métricas clave.",
+      "Visualiza la proyección de crecimiento de tu portafolio a lo largo del tiempo, basada en simulaciones de Montecarlo.",
     gif: "/Pantalla4.gif",
   },
   {
-    title: "Paso 5: Confirmación Final",
+    title: "Paso 5: Rendimiento Histórico",
     description:
-      "Revisa y confirma tu selección final. Podrás ajustar las cantidades y guardar tu portafolio.",
+      "Visualiza el rendimiento histórico de tu portafolio para entender su comportamiento pasado y tomar decisiones informadas.",
     gif: "/Pantalla5.gif",
   },
 ];
