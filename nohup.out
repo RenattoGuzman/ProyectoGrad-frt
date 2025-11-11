@@ -1,0 +1,37 @@
+
+> vite-react-typescript-starter@0.0.0 dev
+> vite --host --port 5173
+
+
+  VITE v5.4.20  ready in 427 ms
+
+  ➜  Local:   http://localhost:5173/
+  ➜  Network: http://174.138.67.200:5173/
+  ➜  Network: http://10.17.0.5:5173/
+  ➜  Network: http://10.108.0.2:5173/
+Files in the public directory are served at the root path.
+Instead of /public/icon.svg, use /icon.svg.
+Files in the public directory are served at the root path.
+Instead of /public/icon.svg, use /icon.svg.
+11:53:21 PM [vite] vite.config.ts changed, restarting server...
+11:53:21 PM [vite] error:0480006C:PEM routines::no start line
+11:53:21 PM [vite] server restart failed
+11:56:59 PM [vite] vite.config.ts changed, restarting server...
+11:56:59 PM [vite] server restarted.
+Files in the public directory are served at the root path.
+Instead of /public/icon.svg, use /icon.svg.
+Files in the public directory are served at the root path.
+Instead of /public/icon.svg, use /icon.svg.
+Files in the public directory are served at the root path.
+Instead of /public/icon.svg, use /icon.svg.
+
+> vite-react-typescript-starter@0.0.0 dev
+> vite --host --port 5173
+
+
+  VITE v5.4.20  ready in 374 ms
+
+  ➜  Local:   http://localhost:5173/
+  ➜  Network: http://174.138.67.200:5173/
+  ➜  Network: http://10.17.0.5:5173/
+  ➜  Network: http://10.108.0.2:5173/
