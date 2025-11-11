@@ -16,6 +16,8 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
+import { ChevronDown, ChevronUp } from "lucide-react";
+
 interface Stock {
   ticker: string;
   percentage: number;
@@ -119,6 +121,10 @@ export default function ProjectionPage({
       </div>
     );
   }
+
+  const [showMonteCarlo, setShowMonteCarlo] = useState(false);
+  const [showPortfolio, setShowPortfolio] = useState(false);
+
 
   const initialValue = parseFloat(investmentAmount) || 10000;
 
@@ -272,116 +278,143 @@ export default function ProjectionPage({
             </div>
           </div>
 
-          {/* --- Recharts Monte Carlo chart --- */}
-          <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-xl p-8 border border-white/20 mb-8">
-            <h3 className="text-2xl font-bold text-[#114B5F] mb-6">
-              Proyección Monte Carlo (252 días)
-            </h3>
-            <div className="relative h-80">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart
-                  data={chartData}
-                  margin={{ top: 20, right: 20, bottom: 20, left: 0 }}
-                >
-                  <XAxis
-                    dataKey="day"
-                    label={{
-                      value: "Días",
-                      position: "insideBottom",
-                      offset: -10,
-                    }}
-                  />
-                  <YAxis
-                    domain={["dataMin", "dataMax"]}
-                    tickFormatter={(value) =>
-                      `$${Math.round(value).toLocaleString()}`
-                    }
-                    width="auto"
-                    label={{
-                      value: "Valor del Portafolio",
-                      angle: -90,
-                      position: "insideLeft",
-                      offset: 10,
-                      dy: 0,
-                      style: { textAnchor: "middle" },
-                    }}
-                  />
-                  <Tooltip content={<CustomTooltip />} />
+    {/* --- Collapsible: Proyección Monte Carlo --- */}
+    <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 mb-8 overflow-hidden transition-all">
+      <button
+        onClick={() => setShowMonteCarlo((prev) => !prev)}
+        className="w-full flex justify-between items-center px-8 py-6 text-left"
+      >
+        <h3 className="text-2xl font-bold text-[#114B5F]">
+          Proyección Monte Carlo (252 días)
+        </h3>
+        {showMonteCarlo ? (
+          <ChevronUp className="w-6 h-6 text-[#114B5F]" />
+        ) : (
+          <ChevronDown className="w-6 h-6 text-[#114B5F]" />
+        )}
+      </button>
 
-                  {/* Simulation lines */}
-                  {mcSimulationData.simulation_lines.map((_, idx) => (
-                    <Line
-                      key={idx}
-                      type="monotone"
-                      dataKey={`sim${idx}`}
-                      stroke="#464141"
-                      strokeOpacity={0.15}
-                      dot={false}
-                      isAnimationActive={false}
-                    />
-                  ))}
+      {showMonteCarlo && (
+        <div className="px-8 pb-8">
+          <div className="relative h-80">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart
+                data={chartData}
+                margin={{ top: 20, right: 20, bottom: 20, left: 0 }}
+              >
+                <XAxis
+                  dataKey="day"
+                  label={{
+                    value: "Días",
+                    position: "insideBottom",
+                    offset: -10,
+                  }}
+                />
+                <YAxis
+                  domain={["dataMin", "dataMax"]}
+                  tickFormatter={(value) =>
+                    `$${Math.round(value).toLocaleString()}`
+                  }
+                  width="auto"
+                  label={{
+                    value: "Valor del Portafolio",
+                    angle: -90,
+                    position: "insideLeft",
+                    offset: 10,
+                    style: { textAnchor: "middle" },
+                  }}
+                />
+                <Tooltip content={<CustomTooltip />} />
 
-                  {/* Mean line */}
+                {/* Simulation lines */}
+                {mcSimulationData.simulation_lines.map((_, idx) => (
                   <Line
+                    key={idx}
                     type="monotone"
-                    dataKey="mean"
-                    stroke="#1A936F"
-                    strokeWidth={3}
+                    dataKey={`sim${idx}`}
+                    stroke="#464141"
+                    strokeOpacity={0.15}
                     dot={false}
-                    name="Promedio"
+                    isAnimationActive={false}
                   />
+                ))}
 
-                  {/* Mode line */}
-                  <Line
-                    type="monotone"
-                    dataKey="mode"
-                    stroke="#114B5F"
-                    strokeWidth={3}
-                    dot={false}
-                    strokeDasharray="7 7"
-                    name="Moda"
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
+                {/* Mean line */}
+                <Line
+                  type="monotone"
+                  dataKey="mean"
+                  stroke="#1A936F"
+                  strokeWidth={3}
+                  dot={false}
+                  name="Promedio"
+                />
+
+                {/* Mode line */}
+                <Line
+                  type="monotone"
+                  dataKey="mode"
+                  stroke="#114B5F"
+                  strokeWidth={3}
+                  dot={false}
+                  strokeDasharray="7 7"
+                  name="Moda"
+                />
+              </LineChart>
+            </ResponsiveContainer>
           </div>
+        </div>
+      )}
+    </div>
 
           {/* --- Portfolio composition --- */}
-          <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-xl p-6 border border-white/20 mb-8">
-            <h3 className="text-xl font-bold text-[#114B5F] mb-4">
-              Composición del Portafolio
-            </h3>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {stocks.map((stock) => (
-                <div
-                  key={stock.ticker}
-                  className="p-4 bg-gradient-to-br from-gray-50 to-white rounded-xl border border-gray-200 flex items-center justify-between"
-                >
-                  {/* Left: Logo */}
-                  <div className="flex-shrink-0">
-                    <img
-                      src={stock.logo_link}
-                      alt={`${stock.ticker} logo`}
-                      className="w-12 h-12 object-contain"
-                      onError={(e) => {
-                        e.currentTarget.style.display = "none";
-                        e.currentTarget.parentElement!.innerHTML = `<span class="text-lg font-bold text-[#114B5F]">${stock.ticker}</span>`;
-                      }}
-                    />
-                  </div>
+          {/* --- Collapsible: Composición del Portafolio --- */}
+          <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 mb-8 overflow-hidden transition-all">
+            <button
+              onClick={() => setShowPortfolio((prev) => !prev)}
+              className="w-full flex justify-between items-center px-8 py-6 text-left"
+            >
+              <h3 className="text-xl font-bold text-[#114B5F]">
+                Composición del Portafolio
+              </h3>
+              {showPortfolio ? (
+                <ChevronUp className="w-6 h-6 text-[#114B5F]" />
+              ) : (
+                <ChevronDown className="w-6 h-6 text-[#114B5F]" />
+              )}
+            </button>
 
-                  {/* Right: Ticker + Percentage */}
-                  <div className="text-right">
-                    <p className="text-lg font-bold text-[#114B5F]">
-                      {stock.ticker}
-                    </p>
-                    <p className="text-2xl font-bold text-[#1A936F]">
-                      {stock.percentage.toFixed(2)}%
-                    </p>
-                  </div>
+            {showPortfolio && (
+              <div className="px-8 pb-8">
+                <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {stocks.map((stock) => (
+                    <div
+                      key={stock.ticker}
+                      className="p-4 bg-gradient-to-br from-gray-50 to-white rounded-xl border border-gray-200 flex items-center justify-between"
+                    >
+                      <div className="flex-shrink-0">
+                        <img
+                          src={stock.logo_link}
+                          alt={`${stock.ticker} logo`}
+                          className="w-12 h-12 object-contain"
+                          onError={(e) => {
+                            e.currentTarget.style.display = "none";
+                            e.currentTarget.parentElement!.innerHTML = `<span class='text-lg font-bold text-[#114B5F]'>${stock.ticker}</span>`;
+                          }}
+                        />
+                      </div>
+                      <div className="text-right">
+                        <p className="text-lg font-bold text-[#114B5F]">
+                          {stock.ticker}
+                        </p>
+                        <p className="text-2xl font-bold text-[#1A936F]">
+                          {stock.percentage.toFixed(2)}%
+                        </p>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+              </div>
+            )}
           </div>
 
           <button
