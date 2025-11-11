@@ -41,7 +41,7 @@ const TUTORIAL_STEPS = [
   {
     title: "Paso 2: Configuración de Riesgo",
     description:
-      "Define tu nivel de riesgo y horizonte de inversión. El riesgo representa tu tolerancia a la volatilidad y posibles pérdidas. Se recomienda elegir el riesgo automático. ",
+      "Define tu nivel de riesgo. El riesgo representa tu tolerancia a la volatilidad y posibles pérdidas. Se recomienda elegir la opción de riesgo optimizado.",
     gif: "/Pantalla2.gif",
   },
   {
@@ -59,9 +59,15 @@ const TUTORIAL_STEPS = [
   {
     title: "Paso 5: Rendimiento Histórico",
     description:
-      "Visualiza el rendimiento histórico de tu portafolio para entender su comportamiento pasado y tomar decisiones informadas.",
+      "Visualiza el rendimiento histórico de tu portafolio para entender su comportamiento pasado. Puedes eliminar o agregar activos según tus preferencias.",
     gif: "/Pantalla5.gif",
   },
+  {
+    title: "Antes de terminar el tutorial...",
+    description:
+      "Recuerda que esta es una herramienta para ayudar en la toma de decisiones de inversión, haciendo énfasis en el riesgo y la diversificación. No olvides siempre hacer tu propia investigación y considerar tus objetivos financieros personales.",
+    gif: "/icon.svg",
+},
 ];
 
 const getIndustryValue = (name: string) => INDUSTRY_VALUES[name] ?? name;
@@ -252,7 +258,7 @@ export default function IndustrySelectionPage({
         </div>
 
         <div className="text-center mt-8">
-          <p className="text-white/60 text-sm">Paso 1 de 2</p>
+          <p className="text-white/60 text-sm">Paso 1</p>
         </div>
       </div>
       {/* Modal de Tutorial */}
@@ -294,18 +300,26 @@ export default function IndustrySelectionPage({
               {/* GIF */}
               <div
                 className="mb-6 rounded-2xl overflow-hidden bg-gray-100 flex items-center justify-center"
-                style={{ height: "300px" }}
+                style={{ height: tutorialStep === 5 ? "200px" : "300px ", 
+                        backgroundColor: tutorialStep === 5 ? "transparent" : "rgb(243 244 246 / var(--tw-bg-opacity, 1))" 
+                }}
               >
                 <img
                   key={gifSrc} 
                   src={gifSrc}
                   alt={TUTORIAL_STEPS[tutorialStep].title}
-                  className="w-full h-full object-cover"
+                  className={`${tutorialStep === 5 ? "w-44 h-44" : "w-full h-full object-cover"}`}
                 />
               </div>
 
               {/* Descripción */}
-              <p className="text-lg text-gray-700 leading-relaxed mb-8">
+              <p className="text-lg text-gray-700 leading-relaxed mb-8"
+                  style={
+                    {
+                      height: tutorialStep === 5 ? "150px" : ""
+                    }
+                  }
+              >
                 {TUTORIAL_STEPS[tutorialStep].description}
               </p>
 
@@ -346,7 +360,7 @@ export default function IndustrySelectionPage({
                        hover:shadow-lg hover:scale-105
                        transition-all duration-200"
                   >
-                    Terminar
+                    Terminar Tutorial
                   </button>
                 )}
               </div>

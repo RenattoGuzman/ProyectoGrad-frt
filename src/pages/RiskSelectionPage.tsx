@@ -92,9 +92,9 @@ export default function RiskSelectionPage({ selectedIndustries, onSubmit, onBack
     const conservativeThreshold = riskRanges.min_volatility + (range * 0.25)
     const moderateThreshold = riskRanges.min_volatility + (range * 0.50)
     
-    if (riskLevel < conservativeThreshold) return 'Mayor estabilidad con retornos predecibles y menor volatilidad'
-    if (riskLevel < moderateThreshold) return 'Balance perfecto entre estabilidad y potencial de crecimiento'
-    return 'Mayor potencial de retorno con volatilidad más alta'
+    if (riskLevel < conservativeThreshold) return 'Mayor estabilidad con retornos más estables y menor riesgo'
+    if (riskLevel < moderateThreshold) return 'Balance perfecto entre riesgo y potencial de crecimiento'
+    return 'Mayor potencial de retorno con riesgo más alto'
   }
 
   const formatPercentage = (value: number) => {
@@ -155,11 +155,14 @@ export default function RiskSelectionPage({ selectedIndustries, onSubmit, onBack
             <span className="text-white font-semibold text-lg">Recomendación de Portafolios</span>
           </div>
 
-          <h1 className="text-5xl md:text-6xl font-bold text-white mb-4 tracking-tight">
-            Define tu tolerancia
+          <h1 className="text-3xl md:text-6xl font-bold text-white mb-4 tracking-tight">
+            Define tu tolerancia al riesgo
           </h1>
           <p className="text-xl text-white/80 max-w-2xl mx-auto">
-            Ajusta el nivel de riesgo que estás dispuesto a asumir en tu inversión
+            Ajusta el nivel de riesgo que estás dispuesto a asumir en tu inversión. 
+          </p>
+          <p className="text-xl text-white/80 max-w-2xl mx-auto">
+            Recuerda que ninguna inversión está libre de riesgo.
           </p>
         </div>
 
@@ -319,7 +322,7 @@ export default function RiskSelectionPage({ selectedIndustries, onSubmit, onBack
         </div>
 
         <div className="text-center mt-8">
-          <p className="text-white/60 text-sm">Paso 2 de 2</p>
+          <p className="text-white/60 text-sm">Paso 2</p>
         </div>
       </div>
 
